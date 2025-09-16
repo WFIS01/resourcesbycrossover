@@ -2,99 +2,161 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Crossover Bolt v0.1</title>
+  <title>EagBlaster for Chalk</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
+      font-family: 'Geist', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+      color: #222;
       display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 1rem;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
-      font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(160deg, #1e293b, #0f172a);
-      color: #f8fafc;
+      gap: 1.5rem;
     }
-
-    /* Header */
-    header {
-      position: fixed;
-      top: 15px;
-      left: 20px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #f1f5f9;
-      opacity: 0.95;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    header span {
-      font-size: 0.85rem;
-      font-weight: 400;
-      color: #94a3b8;
-    }
-
-    /* Footer */
-    footer {
-      position: fixed;
-      bottom: 15px;
-      width: 100%;
-      text-align: center;
+    .version {
       font-size: 0.9rem;
-      color: #94a3b8;
-      letter-spacing: 0.3px;
+      color: #555;
     }
-
-    /* Main button */
-    #openBtn {
-      padding: 16px 36px;
-      font-size: 1.2rem;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      border: none;
-      border-radius: 12px;
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .options label {
       cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-      transition: all 0.3s ease;
     }
-
-    #openBtn:hover {
-      transform: translateY(-2px);
-      background: linear-gradient(135deg, #60a5fa, #3b82f6);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    .hidden {
+      display: none;
     }
-
-    #openBtn:active {
-      transform: translateY(0);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    button {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      background: #111;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #333;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      padding: 1rem;
+      border-top: 1px solid #ddd;
+      background: #f0f0f0;
+    }
+    .bottom-right {
+      position: absolute;
+      bottom: 70px;
+      right: 10px;
+      font-size: 0.8rem;
+      color: #666;
     }
   </style>
 </head>
 <body>
   <header>
-    Crossover Bolt <span>v0.1</span>
+    EagBlaster for Chalk <span class="version">v0.1</span>
   </header>
 
-  <button id="openBtn">Open Instance</button>
+  <main>
+    <div class="options">
+      <label><input type="radio" name="server" value="gh"> Server 1 (GH)</label>
+      <label><input type="radio" name="server" value="gl"> Server 2 (GL)</label>
+      <label><input type="radio" name="server" value="url"> Custom Server (URL)</label>
+      <input type="text" id="customUrl" class="hidden" placeholder="Enter custom URL">
+      <label><input type="radio" name="server" value="file"> Custom File (.eagh)</label>
+      <input type="file" id="customFile" class="hidden" accept=".eagh">
+    </div>
+    <button id="openBtn">Open Instance</button>
+  </main>
+
+  <div class="bottom-right">
+    Instance URL / File Selector
+  </div>
 
   <footer>
-    Made by Snipe Softworks 🍀 • Made in UK
+    Made by Snipe Softworks 🍀 — Made in UK
   </footer>
 
   <script>
-    document.getElementById("openBtn").addEventListener("click", async () => {
-      const url = "https://raw.githubusercontent.com/WFIS01/SnipeHub-UK/refs/heads/main/craft.html";
+    const openBtn = document.getElementById("openBtn");
+    const customUrlInput = document.getElementById("customUrl");
+    const customFileInput = document.getElementById("customFile");
+
+    document.querySelectorAll("input[name='server']").forEach(radio => {
+      radio.addEventListener("change", () => {
+        customUrlInput.classList.toggle("hidden", radio.value !== "url" || !radio.checked);
+        customFileInput.classList.toggle("hidden", radio.value !== "file" || !radio.checked);
+      });
+    });
+
+    openBtn.addEventListener("click", async () => {
+      const selected = document.querySelector("input[name='server']:checked");
+      if (!selected) {
+        alert("Please select a server option.");
+        return;
+      }
+
       try {
-        const response = await fetch(url);
-        const html = await response.text();
-        const newTab = window.open("", "_blank");
-        newTab.document.open();
-        newTab.document.write(html);
-        newTab.document.close();
+        if (selected.value === "gh") {
+          const url = "https://raw.githubusercontent.com/WFIS01/Blaster/refs/heads/main/latest_chessboard.html";
+          const res = await fetch(url);
+          if (!res.ok) throw new Error();
+          const text = await res.text();
+          const newWin = window.open();
+          newWin.document.write(text);
+        }
+        else if (selected.value === "gl") {
+          const url = "https://gitlab.com/snipeco/popcornclient/-/raw/main/latest_chessboard.html?inline=false";
+          const res = await fetch(url);
+          if (!res.ok) throw new Error();
+          const text = await res.text();
+          const newWin = window.open();
+          newWin.document.write(text);
+        }
+        else if (selected.value === "url") {
+          const url = customUrlInput.value.trim();
+          if (!url) {
+            alert("Please enter a custom URL.");
+            return;
+          }
+          const res = await fetch(url);
+          if (!res.ok) throw new Error();
+          const text = await res.text();
+          const newWin = window.open();
+          newWin.document.write(text);
+        }
+        else if (selected.value === "file") {
+          const file = customFileInput.files[0];
+          if (!file) {
+            alert("Please choose a .eagh file.");
+            return;
+          }
+          const text = await file.text();
+          const newWin = window.open();
+          newWin.document.write(text);
+        }
       } catch (err) {
-        alert("Failed to load instance.");
-        console.error(err);
+        alert("Failed to load, check the file’s code or it’s being blocked.");
       }
     });
   </script>
