@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script>
+    // 🔧 CONFIG VARIABLES
+    const accent_hex = "#77dd77"; // pastel green
+    const site_name = "Ducky's";
+    const favicon_url = "https://game-icons.net/icons/ffffff/000000/1x1/sbed/blaster.png";
+    const tab_name = "EagBlaster";
+    const version_display = "EagBlaster";
+    const version = "v0.2";
+
+    // Choose which selections to show
+    const Selections = {
+      gh: true,
+      gl: true,
+      file: true,
+      url: true,
+      blastr: true
+    };
+  </script>
+
+  <title>EagBlaster</title>
+  <link id="favicon" rel="icon" href="">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #77dd77;
+      --bg: #121212;
+      --text: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Geist', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin: 0;
+    }
+
+    header h2 {
+      font-size: 1rem;
+      font-weight: 400;
+      margin: 0.2rem 0 0;
+      color: var(--text);
+    }
+
+    header span {
+      font-size: 0.75rem;
+      color: gray;
+    }
+
+    .controls {
+      padding: 1rem;
+      background: #1c1c1c;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      width: 300px;
+    }
+
+    select, input, button {
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    select, input {
+      background: #2a2a2a;
+      color: var(--text);
+    }
+
+    button {
+      background: var(--accent);
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    footer {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: gray;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="siteName"></h1>
+    <h2><span id="versionDisplay"></span> <span id="versionNumber"></span></h2>
+  </header>
+
+  <div class="controls">
+    <select id="sourceSelect"></select>
+
+    <input type="text" id="customUrl" class="hidden" placeholder="Enter custom URL">
+    <input type="file" id="customFile" class="hidden" accept=".eagh">
+    <input type="text" id="blastrUrl" class="hidden" placeholder="Enter .blastr URL">
+    <select id="blastrVersions" class="hidden"></select>
+
+    <button id="openBtn">Open Instance</button>
+  </div>
+
+  <footer>
+    © Snipe Softworks
+  </footer>
+
+  <script>
+    // Apply variables
+    document.title = tab_name;
+    document.getElementById("favicon").href = favicon_url;
+    document.documentElement.style.setProperty("--accent", accent_hex);
+    document.getElementById("siteName").textContent = site_name;
+    document.getElementById("versionDisplay").textContent = version_display;
+    document.getElementById("versionNumber").textContent = version;
+
+    const sourceSelect = document.getElementById("sourceSelect");
+    const customUrl = document.getElementById("customUrl");
+    const customFile = document.getElementById("customFile");
+    const blastrUrl = document.getElementById("blastrUrl");
+    const blastrVersions = document.getElementById("blastrVersions");
+    const openBtn = document.getElementById("openBtn");
+
+    const sources = {
+      gh: "https://raw.githubusercontent.com/WFIS01/Blaster/refs/heads/main/latest_chessboard.html",
+      gl: "https://gitlab.com/snipeco/popcornclient/-/raw/main/latest_chessboard.html?inline=false"
+    };
+
+    // Populate dropdown from Selections
+    if (Selections.gh) sourceSelect.add(new Option("Server 1 (GH)", "gh"));
+    if (Selections.gl) sourceSelect.add(new Option("Server 2 (GL)", "gl"));
+    if (Selections.file) sourceSelect.add(new Option("Custom File (.eagh)", "file"));
+    if (Selections.url) sourceSelect.add(new Option("Custom URL", "url"));
+    if (Selections.blastr) sourceSelect.add(new Option("Blaster URL (.blastr)", "blastr"));
+
+    sourceSelect.addEventListener("change", () => {
+      customUrl.classList.add("hidden");
+      customFile.classList.add("hidden");
+      blastrUrl.classList.add("hidden");
+      blastrVersions.classList.add("hidden");
+
+      if (sourceSelect.value === "url") customUrl.classList.remove("hidden");
+      if (sourceSelect.value === "file") customFile.classList.remove("hidden");
+      if (sourceSelect.value === "blastr") blastrUrl.classList.remove("hidden");
+    });
+
+    async function loadBlastr(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Bad response");
+        const text = await res.text();
+
+        // Parse format: v0.1="url",v0.2="url"
+        const matches = [...text.matchAll(/(v[\d.]+)="([^"]+)"/g)];
+        if (matches.length === 0) throw new Error("Invalid .blastr format");
+
+        blastrVersions.innerHTML = "";
+        matches.forEach(([_, ver, link]) => {
+          const opt = document.createElement("option");
+          opt.value = link;
+          opt.textContent = ver;
+          blastrVersions.appendChild(opt);
+        });
+
+        blastrVersions.classList.remove("hidden");
+      } catch (err) {
+        alert("Failed to load, check the files code or it's being blocked");
+      }
+    }
+
+    openBtn.addEventListener("click", async () => {
+      try {
+        if (sourceSelect.value === "gh") {
+          // ✅ Fetch GitHub raw and inject into new tab
+          const res = await fetch(sources.gh);
+          if (!res.ok) throw new Error("Fetch failed");
+          const html = await res.text();
+
+          const newTab = window.open("about:blank", "_blank");
+          newTab.document.open();
+          newTab.document.write(html);
+          newTab.document.close();
+
+        } else if (sourceSelect.value === "gl") {
+          // Just open GitLab raw file
+          window.open(sources.gl, "_blank");
+
+        } else if (sourceSelect.value === "url") {
+          if (!customUrl.value) return alert("Enter a URL first!");
+          window.open(customUrl.value, "_blank");
+
+        } else if (sourceSelect.value === "file") {
+          const file = customFile.files[0];
+          if (!file) return alert("Select a .eagh file first!");
+          const reader = new FileReader();
+          reader.onload = e => {
+            const blob = new Blob([e.target.result], { type: "text/html" });
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+          };
+          reader.readAsText(file);
+
+        } else if (sourceSelect.value === "blastr") {
+          if (blastrVersions.classList.contains("hidden")) {
+            if (!blastrUrl.value) return alert("Enter a .blastr URL first!");
+            await loadBlastr(blastrUrl.value);
+          } else {
+            window.open(blastrVersions.value, "_blank");
+          }
+        }
+      } catch (err) {
+        alert("Failed to load, check the files code or it's being blocked");
+      }
+    });
+  </script>
+</body>
+</html>
